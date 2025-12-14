@@ -110,14 +110,26 @@ app.get('/files/db', (req, res) => {
     res.json(filesDb);
 });
 
-// 5. Generate Presigned URL (for viewing/downloading)
+// 5. Generate Presigned URL (for viewing/downloading) - Redirect version
 app.get('/file/:name', async (req, res) => {
     try {
         // Generate a temporary URL valid for 24 hours
         const url = await minioClient.presignedGetObject(BUCKET_NAME, req.params.name, 24 * 60 * 60);
-        res.redirect(url); // Or return { url: url }
+        res.redirect(url);
     } catch (err) {
         res.status(500).send('Error generating URL');
+    }
+});
+
+// 6. Get Presigned URL as JSON (for frontend preview)
+app.get('/file/:name/url', async (req, res) => {
+    try {
+        // Generate a temporary URL valid for 1 hour
+        const url = await minioClient.presignedGetObject(BUCKET_NAME, req.params.name, 60 * 60);
+        res.json({ url });
+    } catch (err) {
+        console.error('Error generating presigned URL:', err);
+        res.status(500).json({ error: 'Error generating URL' });
     }
 });
 
